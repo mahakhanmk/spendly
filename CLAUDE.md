@@ -107,6 +107,13 @@ There is no lint/format tooling configured in this repo.
 
 ---
 
+## Git commits
+
+- Do **not** add a `Co-Authored-By: Claude` or `Claude-Session:` trailer to commit messages in this repo — `.claude/settings.local.json` sets `"includeCoAuthoredBy": false`. Check that file before writing any commit message.
+- A `commit-msg` git hook also strips these trailers automatically as a backstop, but don't rely on it — write clean messages in the first place.
+
+---
+
 ## Warnings and things to avoid
 
 - **Never use raw string returns for stub routes** once a step is implemented — always render a template
