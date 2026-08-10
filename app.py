@@ -1,8 +1,8 @@
 import re
 
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 
-from database.db import get_db, init_db, seed_db, create_user, get_user_by_email
+from database.db import get_db, init_db, seed_db, create_user, get_user_by_email, authenticate_user
 
 app = Flask(__name__)
 app.secret_key = "spendly-dev-secret-key"  # dev only, not for production
@@ -29,6 +29,9 @@ def landing():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    if session.get("user_id"):
+        return redirect(url_for("landing"))
+
     if request.method == "GET":
         return render_template("register.html")
 
@@ -50,9 +53,31 @@ def register():
     return redirect(url_for("login"))
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    return render_template("login.html")
+    if session.get("user_id"):
+        return redirect(url_for("landing"))
+
+    if request.method == "GET":
+        return render_template("login.html")
+
+    email = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "")
+
+    user = authenticate_user(email, password)
+    if user is None:
+        return render_template("login.html", error="Invalid email or password.")
+
+    session["user_id"] = user["id"]
+    session["user_name"] = user["name"]
+    return redirect(url_for("landing"))
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("You have been logged out.")
+    return redirect(url_for("login"))
 
 
 @app.route("/terms")
@@ -68,11 +93,6 @@ def privacy():
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
-
-@app.route("/logout")
-def logout():
-    return "Logout — coming in Step 3"
-
 
 @app.route("/profile")
 def profile():
